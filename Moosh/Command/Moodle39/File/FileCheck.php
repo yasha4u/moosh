@@ -69,8 +69,8 @@ class FileCheck extends MooshCommand
         //require_once($CFG->libdir .'/outputlib.php');       // Functions for generating output
         //require_once($CFG->libdir .'/navigationlib.php');   // Class for generating Navigation structure
         require_once($CFG->libdir .'/dmllib.php');          // Database access
-        //require_once($CFG->libdir .'/datalib.php');         // Legacy lib with a big-mix of functions.
-        //require_once($CFG->libdir .'/accesslib.php');       // Access control functions
+        require_once($CFG->libdir .'/datalib.php');         // Legacy lib with a big-mix of functions.
+        require_once($CFG->libdir .'/accesslib.php');       // Access control functions
         //require_once($CFG->libdir .'/deprecatedlib.php');   // Deprecated functions included for backward compatibility
         require_once($CFG->libdir .'/moodlelib.php');       // Other general-purpose functions
         //require_once($CFG->libdir .'/enrollib.php');        // Enrolment related functions
