@@ -90,7 +90,10 @@ class FileCheck extends MooshCommand
         $missing = 0;
         $filestorage = get_file_storage();
         $filesystem = $filestorage->get_file_system();
-        $rs = $DB->get_recordset_sql("SELECT MAX(id) AS id, contenthash FROM {files} WHERE referencefileid IS NULL GROUP BY contenthash");
+        $rs = $DB->get_recordset_sql("SELECT MAX(f.id) AS id, f.contenthash, c.contextlevel, c.instanceid
+                                            FROM {files} f
+                                            LEFT JOIN {context} c ON c.id = f.contextid
+                                            WHERE referencefileid IS NULL GROUP BY contenthash, contextlevel, instanceid");
         foreach ($rs as $file) {
             $line = array();
             /** @var \stored_file $fileobject */
@@ -104,6 +107,15 @@ class FileCheck extends MooshCommand
                 echo "Missing " . $CFG->dataroot.DIRECTORY_SEPARATOR.'filedir/' . $l1 . '/' . $l2 . '/' .$contenthash . "\n";
                 echo $fileobject->get_component() . ' / ' . $fileobject->get_filearea() . ' "' . $fileobject->get_filename() . '" ' .
                         date('Y-m-d H:i' ,$fileobject->get_timecreated()) . ' / ' . date('Y-m-d H:i' ,$fileobject->get_timemodified()) . "\n";
+
+                if ($file->contextlevel == CONTEXT_MODULE) {
+                    $cm = get_coursemodule_from_id('', $file->instanceid);
+
+                    if (!plugin_supports('mod', $cm->modname, FEATURE_NO_VIEW_LINK)) {
+                        echo (new \moodle_url('/mod/' . $cm->modname . '/view.php', ['id' => $file->instanceid]))->out(false) . "\n";
+                    }
+                }
+
                 $missing++;
                 if ($stopafter && $missing === $stopafter) {
                     echo "Found $missing missing files, not searching anymore. Set -s 0 option to disable the limit.\n";
