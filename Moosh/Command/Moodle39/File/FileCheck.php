@@ -100,7 +100,7 @@ class FileCheck extends MooshCommand
             $fileobject = $filestorage->get_file_by_id($file->id);
             $fileexists = $filesystem->is_file_readable_locally_by_hash($file->contenthash);
 
-            if (!$fileexists) {
+            if (!$fileexists && $fileobject->get_component() != 'core_h5p') {
                 $contenthash = $fileobject->get_contenthash();
                 $l1 = $contenthash[0].$contenthash[1];
                 $l2 = $contenthash[2].$contenthash[3];
