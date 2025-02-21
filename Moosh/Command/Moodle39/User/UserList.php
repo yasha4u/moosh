@@ -23,6 +23,7 @@ class UserList extends MooshCommand {
         $this->addOption('d|descending', 'sort in descending order');
         $this->addOption('course-inactive', 'limit to users who never accessed course provided with --course.');
         $this->addOption('course-role:', 'limit to users with given role in a --course.');
+        $this->addOption('course-enrol-plugin:', 'limit to users enrolled with a specific plugin in a --course.');
         $this->addOption('course:', 'select all enrolled in given course id');
 
         $this->addArgument('sql expression');
@@ -42,7 +43,7 @@ class UserList extends MooshCommand {
         $options = $this->expandedOptions;
         $limit_from = 0;
 
-        if (($options['course-inactive'] || $options['course-role']) && !$options['course']) {
+        if (($options['course-enrol-plugin'] || $options['course-inactive'] || $options['course-role']) && !$options['course']) {
             cli_error("You must provide --course if --course-inactive or --course-role is used.");
         }
 
@@ -104,6 +105,27 @@ class UserList extends MooshCommand {
             $extralimit = array_intersect_key($roleusers,$extralimit);
         }
 
+        if ($options['course-enrol-plugin']) {
+            if(!enrol_get_plugin($options['course-enrol-plugin'])){
+                cli_error(sprintf("could not find '%s' enrolment plugin", $options['course-enrol-plugin']));
+            }
+            $sql = "
+                select {user_enrolments}.userid
+                from {user_enrolments}
+                inner join {enrol} on {user_enrolments}.enrolid = {enrol}.id and {enrol}.enrol = :plugintype
+                where {enrol}.courseid = :courseid
+                and {user_enrolments}.status = :status
+                ";
+
+            $params = [
+                'plugintype' => $options['course-enrol-plugin'],
+                'courseid' => $options['course'],
+                'status' => ENROL_USER_ACTIVE,
+            ];
+            $enrolments = $DB->get_records_sql($sql, $params);
+            $extralimit = array_intersect_key($extralimit,$enrolments);
+        }
+
         if($extralimit !== false) {
             $users = array_intersect_key($users,$extralimit);
         }
@@ -128,3 +150,4 @@ class UserList extends MooshCommand {
         return self::$BOOTSTRAP_FULL_NO_ADMIN_CHECK;
     }
 }
+

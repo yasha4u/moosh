@@ -12,6 +12,8 @@ activity-add
 Adds an activity instance to the specified course. The activity is specified by it's component name
 without the plugin type prefix, so "forum", "assign" or "data" for example, and the course is specified
 by it's id.
+Usually you will want to use "-n, --name=" option to set the name of the activity.
+
 See [Moodle forum post](https://moodle.org/mod/forum/discuss.php?d=368091) about using the options. 
 
 Example 1. Add new assignment activity to course with id 2.
@@ -32,7 +34,7 @@ Example 4. Add assignment with name "Easy assignment" and idnumber "ASD123" to c
     
 Example 5. Add quiz "more emails" with intro set to "polite orders", network address restriction set to 192.168.2.2 to course 33.
 
-    moosh activity-add -n 'more emails' -o="--intro=\"polite orders.\" --subnet=192.168.2.2" quiz 33
+    moosh activity-add -n 'more emails' -o "--intro=polite orders. --subnet=192.168.2.2" quiz 33
     
 Example 6. Add scorm "scorm1" with description "my intro ABC" and forcenewattempt set to yes to course 2.
 
@@ -41,6 +43,12 @@ Example 6. Add scorm "scorm1" with description "my intro ABC" and forcenewattemp
 Example 7. Add quiz named "moosh test quiz" with intro set to "Here is your quiz", and activity completion options enabled to course 33
 
     moosh activity-add -n 'moosh test quiz' -o="--intro=Here is your quiz.  --completion=2 --completionview=1 --completionusegrade=1 --completionpass=1" quiz 33
+
+Example 8. Add page "my page" to course id 8, with page content that contains newline.
+
+    moosh activity-add -n 'my page' -o '--intro=my introduction --content=fist line
+    second line' page 8
+
 
 activity-delete
 ---------------
@@ -405,6 +413,35 @@ Example 3: Set Application to "store name", Session to "Tests" and Request to "d
 
     moosh cache-edit-mappings -a "store name" -s Tests -r default_request
 
+cache-set
+-------------------
+
+Enable to attribute cache to specific cache definition
+
+Requires cache definition and cache store
+
+Example 1: Set "redisstore" to "core/calendar"_subscriptions definition 
+
+    moosh cache-set core/calendar_subscriptions redisstore
+
+cache-store-clear
+-----------------
+
+Clear a specific cache store or only a definition for the given cache store
+
+Requires cache store name
+
+Option:
+* --definition, -d : cache definition name
+
+Example 1 : Clear redisstore cache store 
+
+    moosh cache-store-clear --defintion=calendar_subscriptions redisstore
+
+Example 2 : Clear cache definition core/calendar_subscriptions for store named redisstore
+
+    moosh cache-store-clear --definition=core/calendar_subscriptions redisstore
+
 category-config-set
 -------------------
 
@@ -497,6 +534,17 @@ Example 2: Make the category with id 3 a top-level category
 
     moosh category-move 3 0
 
+category-move-courses-from-category-to-another
+----------------------------------------------
+
+Move all courses included into a source category into a destination category
+
+Requires Source course category id and Destination course category id
+
+Example 1: Move all courses included into category with id 1 to category with id 2
+
+    moosh category-move-courses-from-category-to-another 1 2
+
 category-resortcourses
 ----------------------
 
@@ -552,6 +600,22 @@ Example 1: Create two system cohorts "mycohort1" and "mycohort2".
 Example 2: Create cohort "my cohort18" with id "cohort18" under category id 2, with description "Long description".
 
     moosh cohort-create -d "Long description" -i cohort18 -c 2 "my cohort18"
+
+cohort-delete
+------------
+
+Delete one or more cohorts
+
+Requires cohort ids to delete separated by ,
+
+Example 1: Delete cohort of id 42
+
+    moosh cohort-cohort-delete 42
+
+Example 2: Delete cohorts of ids 42 and 2012
+
+    moosh cohort-cohort-delete 42,2012
+
 
 cohort-enrol
 ------------
@@ -669,6 +733,22 @@ Example 2: Set URL to logo for Sky High theme.
 
     moosh config-set logo http://example.com/logo.png theme_sky_high
 
+context-freeze
+--------------
+Freeze or unfreeze a given context
+
+Requires instance id, context level and lock
+
+Lock is 1 if locked, 0 if unlock
+
+Example 1 : Lock course context of id 20
+
+    moosh context-freeze 20 50 1
+
+Example 1 : Unlock course context of id 20
+
+    moosh context-freeze 20 50 0
+
 context-rebuild
 ---------------
 
@@ -703,6 +783,15 @@ Example 3: Backup course id=3 without any user data (excludes users, logs, grade
 
     moosh course-backup --template 3
 
+
+cours-change-format
+-------------------
+
+This command will change the format of a course to another one, triggering all the necessary changes to course such like image transfert.
+
+Example : For a course of id 3 that is in grid format, it will pass to tiles, migrating image for the new course format
+
+    moosh course-change-format 3 tiles
 
 course-cleanup
 --------------
@@ -788,10 +877,63 @@ Example 1: Enroll user with firstname test42 and lastname user42 into the course
 
     moosh course-enrolbyname -r editingteacher -f test42 -l user42 -c T12345
 
+course-enrol-change-status
+------------------
+
+Requires course id
+
+Options :
+* --instanceid=?, -i ? : enrolment instance id, if not command enter in interactive mode and show all available enrolment instance for the given course, you'll have to choose status from prompt
+* --status=0 or 1, -s 0 or 1 : status of enrolment instance 0 (default value) -> enabled, 1 -> disabled
+
+Example1 : change course enrolment instance status in interactive mode 
+
+    moosh course-enrol-change-status 2
+
+Example1 : change course enrolment instance status to disable for instance 42
+
+    moosh course-enrol-change-status -i=42 -s=1 2
+
+course-enrol-list
+----------------------
+
+List all enrolment instances for one or more courses given a list of course IDs.
+
+Example 1: List all enrolment instances for course 42
+
+    moosh course-enrol-list 42
+
 course-enableselfenrol
 ----------------------
 
-Enable self enrolment on one or more courses given a list of course IDs. By default self enrolment is enabled without an enrolment key, but one can be passed as an option.
+Enable self enrolment on one or more courses given a list of course IDs. By default self enrolment is enabled without an enrolment key, but one can be passed as an option. In addition, you can customize the self-enrolment instance by specifying a role, a custom instance name, welcome message settings, and a custom welcome message.
+
+Options
+
+* --key, -k &lt;enrolmentkey&gt;
+  Set an enrolment key. If omitted, any pre-existing key will be blanked.
+
+* --roleid, -r &lt;roleid&gt;
+  Specify the numerical ID of the role to assign to newly enrolled users.
+
+* --name, -n &lt;custom name&gt;
+  Provide a custom name for the self-enrolment instance.
+
+* --sendmessage, -s &lt;integer&gt;
+  Control the welcome email for new users. Accepts integer values:
+  - `0` - Do not send the welcome email.
+  - `1` - Send welcome email from course contact.
+  - `2` - Send welcome email from course key holder.
+  - `3` - Send welcome email from no reply.
+  If not provided, the welcome message setting is left unchanged.
+
+* --message, -m &lt;text&gt;
+  Specify the welcome message text to send to new users.
+
+Arguments
+
+- id
+  One or more course IDs for which self enrolment should be enabled.
 
 Example 1: Enable self enrolment on a course without an enrolment key
 
@@ -800,6 +942,11 @@ Example 1: Enable self enrolment on a course without an enrolment key
 Example 2: Enable self enrolment on a course with an enrolment key
 
     moosh course-enableselfenrol --key "an example enrolment key" 3
+
+Example 3: Enable self enrolment with a custom role assignment, custom instance name, welcome email settings, and a custom welcome message
+
+    moosh course-enableselfenrol --roleid 5 --name "Premium Enrolment" --sendmessage 1 --message "Welcome to our Premium Course!" 3
+
 
 course-info
 -----------
@@ -967,6 +1114,14 @@ Example 1: Unenrol users with id 7, 9, 12 and 16 from course with id 2.
 
     moosh course-unenrol 2 7 9 12 16
 
+dashboard-reset-all
+----------
+Reset all users dashboard
+
+Example 1: Reset all users dashboard
+
+    moosh dashboard-reset-all
+
 
 data-stats
 ----------
@@ -979,8 +1134,10 @@ Outputs data in json format when run using --json option.
 db-stats
 --------
 
-Shows the total size of the Moodle database and the biggest tables.
-With -H or -j options the sizes will be shown in bytes (ie "286720" instead of "280KB").
+Shows the total size of the Moodle database, the top 3 biggest tables and tables: log, grades, grades history.
+With -H, -j or -e options the sizes will be shown in bytes (ie "286720" instead of "280KB").
+
+Using extended option (-e) it shows all tables.
 
 Example 1: Show me basic database statistics, formatted for human consumption. 
 
@@ -989,6 +1146,10 @@ Example 1: Show me basic database statistics, formatted for human consumption.
 Example 2: Database statistics in JSON format. 
 
     moosh db-stats -j
+
+Example 3: Extended database statistics in json format. It provides statistics for each table
+
+    moosh db-stats -e
     
 debug-off
 ---------
@@ -1552,16 +1713,40 @@ Example 2:
 group-memberadd
 ---------------
 
-Add a member to a group.
+Add member to a specified group. It may be done using member username or id. If course id is specified, addition
+is based on username(s), otherwise on user id(s).
 
-Example 1:
+Available options:
 
-    moosh group-memberadd -c courseid -g groupid membername1 [membername2] ...
+| Option       | Description |
+|--------------|-------------|
+| -g, --group  | Group id.   |
+| -c, --course | Course id.  |
 
-Example 2:
-
+Command syntax (by user id):
+    
     moosh group-memberadd -g groupid memberid1 [memberid2] ...
 
+Command syntax (by user username)
+
+    moosh group-memberadd -g groupid memberid1 [memberid2] ...    
+
+Example 1: Add user with id 111 to the group with id 333.
+
+    moosh group-memberadd -g 333 111
+
+Example 2: Add users with ids 1, 2 and 3 to the group with id 333
+
+    moosh group-memberadd -g 333 1 2 3
+
+Example 3: Add user with username `example_username` enrolled in course with id 5 to the group with id 1
+
+    moosh group-memberadd -g 1 -c 5 example_username
+
+Example 4: Add users with usernames `example_username1`, `example_username2` enrolled in course with id 5 
+to the group with id 1
+    
+    moosh group-memberadd -g 1 -c 5 example_username1, example_username2
 
 grouping-create
 ---------------
@@ -1580,6 +1765,107 @@ Add a group to a grouping.
 Example:
 
     moosh group-assigngrouping -G groupingid groupid1 [groupid2] ...
+
+
+h5p-core-contenttypes-export
+----
+Exports libraries from H5p core to file in csv format. Be aware that H5p Core libraries are stored separately
+from H5p Plugin libraries.
+
+Available options:
+
+| Option     | Description               |
+|------------|---------------------------|
+| -n, --name | Defines target file name. |
+
+
+Example 1: Export content types
+
+    moosh h5p-core-contenttypes-export
+
+Example 2: Export content types with custom filename "my-custom-file.csv"
+
+    moosh h5p-core-contenttypes-export -n my-custom-file
+
+Example 3: Export content types to txt file (using csv format)
+
+    moosh h5p-core-contenttypes-export -n my-custom-txt-file.txt 
+
+
+h5p-core-libraries-export
+----
+Exports content types from H5p core to file in csv format. Be aware that H5p Core libraries are stored separately
+from H5p Plugin libraries.
+
+Available options:
+
+| Option     | Description               |
+|------------|---------------------------|
+| -n, --name | Defines target file name. |
+
+
+Example 1: Export libraries
+
+    moosh h5p-core-libraries-export
+
+Example 2: Export libraries with custom filename "my-custom-file.csv"
+
+    moosh h5p-core-libraries-export -n my-custom-file
+
+Example 3: Export content types to txt file (using csv format)
+    
+    moosh h5p-core-libraries-export -n my-custom-txt-file.txt 
+
+h5p-plugin-libraries-export
+----
+Exports libraries from H5p plugin to file in csv format. In fact H5p content types
+are just libraries that are marked as runnable. Be aware that H5p Plugin libraries are stored separately
+from H5p Core libraries.
+
+Available options:
+
+| Option     | Description               |
+|------------|---------------------------|
+| -n, --name | Defines target file name. |
+
+
+Example 1: Export libraries types
+
+    moosh h5p-plugin-libraries-export
+
+Example 2: Export libraries with custom filename "my-custom-file.csv"
+
+    moosh h5p-plugin-libraries-export -n my-custom-file
+
+Example 3: Export libraries to txt file (using csv format)
+
+    moosh h5p-plugin-libraries-export -n my-custom-txt-file.txt 
+
+h5p-plugin-contenttypes-export
+----
+Exports content types from H5p plugin to file in csv format. In fact H5p content types 
+are just libraries that are marked as runnable. Be aware that H5p Plugin libraries are stored separately
+from H5p Core libraries. 
+
+Available options:
+
+| Option     | Description               |
+|------------|---------------------------|
+| -n, --name | Defines target file name. |
+
+
+Example 1: Export content types types
+
+    moosh h5p-plugin-contenttypes-export
+
+Example 2: Export content types with custom filename "my-custom-file.csv"
+
+    moosh h5p-plugin-contenttypes-export -n my-custom-file
+
+Example 3: Export content types to txt file (using csv format)
+
+    moosh h5p-plugin-contenttypes-export -n my-custom-txt-file.txt 
+
 
 info
 ----
@@ -1735,6 +2021,22 @@ Example:
 
     moosh php-eval 'var_dump(get_object_vars($CFG))'
 
+plugin-hideshow
+---------------
+Hide or show a plugin in all site context
+
+Requires plugin type, plugin name and show option.
+
+Show option is 0 if hide and 1 if show.
+
+This will work for the following plugin types:
+
+block, mod, assignfeedback, assignsubmission, qtype, qbehaviour, enrol, filter, editor, auth, license, repository, courseformat or avaibility
+
+Example 1 : Hide chat module plugin for entire site
+
+    moosh plugin-hideshow mod chat 0
+
 
 plugin-download
 ---------------
@@ -1812,6 +2114,32 @@ If you do not have write permissions on the plugins' folder it will advice you w
 Example:
 
     moosh plugin-uninstall theme_elegance
+
+question-export
+---------------
+
+Exports all or selected questions.
+
+Parameters
+
+| Option          | Description                                         |
+|-----------------|-----------------------------------------------------|
+| -C, --category  | Questions category id.                              |
+| -c, --course    | Questions course id.                                |
+| -f, --filename  | Exported file name or path without extension.       |
+| -r, --recursive | Use only with -C. Exports also children categories. |
+
+Example: export all questions
+
+    moosh question-export
+
+Example: export questions with category with id 3 to file my-questions.json
+
+    moosh question-export -C 3 -f my-questions
+
+Example: export questions with category with id 3 and all its child categories to file my-questions.json
+
+    moosh question-export -C 3 -f my-questions -r
 
 question-import
 ---------------
@@ -1892,6 +2220,28 @@ Example 1: Get concurrent users between 20-01-2014 and 27-01-2014 with 30 minut 
 Example 2: Create the report for the last week. Could be used in a cronjob.
 
     start=$(date --date="7 days ago" +"%Y-%m-%d");finish=$(date +"%Y-%m-%d");moosh report-concurrency --from $start --to $finish
+
+request-select
+-------
+
+Run any custom SQL Select against bootstrapped Moodle instance DB and return resultset with csv format with ; separator.
+
+Requires a select query as argument.
+
+Usefull to create a csv file to import datas in moodle
+
+Usefull also to retrieve an value to reuse it later in a script composed of moosh commands
+
+Example 1: Select username, firstname, lastname and email 
+
+    moosh request-select "select username,firstname,lastname, email from {user}"
+
+Output:
+
+    egrieg;Edward,Grieg,egrieg@example.com
+
+    hpurcell;Henry;Purcell,hpurcell@example.com
+
 
 restore-settings
 ----------------
@@ -2091,6 +2441,27 @@ Example 1: show list of locked tasks (if any)
 Example 2: show all tasks and their status (locked/unlocked)
 
     moosh task-lock-check -a
+
+task-schedule
+-------------
+
+Schedule Moodle task
+
+Requires task name with namespace
+
+Options:
+* -M, --minute :minute
+* -H, --hour : hour
+* -d, --day : day
+* -m, --month : month
+* -w, --dayofweek : Day of week
+* -x, --disabled : Disabled
+* -r, --resettodefaults : Reset to defaults
+
+
+Example 1 : Schedule cleanup_task to launch every day at 01:01
+
+    moosh -d=* -H=1 -m=1 "\tool_messageinbound\task\cleanup_task"
 
 theme-info
 ----------
@@ -2354,3 +2725,37 @@ Calls
 Example: Get list of all courses enroled for a user
 
     moosh webservice-call --token 4ac42118db3ee8d4b1ae78f2c1232afd --params userid=3 core_enrol_get_users_courses
+
+webservice-install
+------------------
+
+Install a Moodle Webservice
+
+Requires service name and capabilities
+* service name is the services["shortname'] defined in db/services.php file of a plugin
+* Capabilities are separated by commas
+
+Options:
+* -m, --mail : mail, by default noreply user mail
+* -u, --username : username
+  * by default 'user_<servicename> will be used
+  * if not exists user is created
+* -r, --rolename : role shortname
+  * by default role_<servicename> will used
+  * if not exists role will be created
+* i, --iprestriction : ip restriction
+  * empty by default so all ip authorized
+-v, --validuntil : valid until
+  * empty so valid forever
+
+Output:
+* user user_servicename is created
+* role role_servicename are created with definied capabilities
+* user has role role_servicename on system
+* webservice is instanciate with its function for user user_servicename
+* token is genrated and output
+
+Example 1 : Install a service named wsservicename with capabilities 
+
+   moosh webservice-install wsservicename 'plugintype/pluginname:capability1,plugintype/pluginname:capability2'
+

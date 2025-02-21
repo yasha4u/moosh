@@ -20,6 +20,7 @@ define('ARG_GENERIC', 0);
  */
 define('ARG_EXISTING_FILENAME', 1);
 
+#[\AllowDynamicProperties]
 class MooshCommand {
 
     /**
@@ -254,7 +255,7 @@ class MooshCommand {
                 if ($v === null) {
                     $v = '';
                 }
-                $expanded = str_replace('%s', $arg, $v);
+                $expanded = str_replace('%s', (string) $arg, (string) $v);
                 if ($this->verbose && $v != $expanded) {
                     echo "'$k' expanded from '$v' to '$expanded'\n";
                 }
@@ -277,7 +278,7 @@ class MooshCommand {
                 if ($v === null) {
                     $v = '';
                 }
-                $expanded = str_replace('%s', $arg, $v);
+                $expanded = str_replace('%s', (string) $arg, (string) $v);
                 if ($this->verbose && $v != $expanded) {
                     echo "'$k' manually expanded from '$v' to '$expanded'\n";
                 }
@@ -377,11 +378,22 @@ class MooshCommand {
     /**
      * Does the command require writing to ~/.moosh/ directory?
      *
-     * @return int
+     * @return bool
      */
     public function requireHomeWriteable() {
         return false;
     }
+
+    /**
+     * Should moosh parse the arguments for the command?
+     * Overwrite to return false if you want to parse the arguments yourself.
+     *
+     * @return bool
+     */
+    public function parseArguments() {
+        return true;
+    }
+
 
     /**
      * Loads temporary session information from the temp file.
